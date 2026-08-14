@@ -125,7 +125,7 @@ if uploaded_image is not None and uploaded_excel is not None:
             width=canvas_width,
             drawing_mode=drawing_mode,
             display_toolbar=True,
-            key=canvas_key,
+            key="qra_canvas_v2",
         )
 
     mapped_is_data = {}
