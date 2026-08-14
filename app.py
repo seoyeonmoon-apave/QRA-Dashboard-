@@ -17,17 +17,6 @@ div[role="radiogroup"] > label > div > p {
 </style>
 """, unsafe_allow_html=True)
 
-# [마법의 패치 완결판] 파이썬/스트림릿 버전 충돌 방지 로직
-import streamlit.elements.image as st_image
-if not hasattr(st_image, 'image_to_url'):
-    def patched_image_to_url(image, width=None, clamp=False, channels="RGB", output_format="auto", image_id="", **kwargs):
-        if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
-        buffered = io.BytesIO()
-        image.save(buffered, format="JPEG", quality=95)
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        return f"data:image/jpeg;base64,{img_str}"
-    st_image.image_to_url = patched_image_to_url
 
 from streamlit_drawable_canvas import st_canvas
 
@@ -62,17 +51,39 @@ if uploaded_image is not None and uploaded_excel is not None:
         st.error(f"엑셀 데이터 로드 실패. 시트 및 데이터를 확인하십시오.\nError: {e}")
         st.stop()
 
-    img_original = Image.open(uploaded_image).convert("RGBA") 
-    white_bg = Image.new("RGBA", img_original.size, (255, 255, 255, 255)) 
-    white_bg.alpha_composite(img_original) 
-    bg_image = white_bg.convert("RGB") 
-    
+    # --- 업로드 도면 이미지 처리 ---
+    from PIL import ImageOps
+
+    img_original = Image.open(uploaded_image)
+
+    # 휴대폰/스캔 이미지의 EXIF 회전 정보 보정
+    img_original = ImageOps.exif_transpose(img_original)
+
+    # 투명 배경 PNG 대응을 위해 RGBA로 변환
+    img_original = img_original.convert("RGBA")
+
+    # 투명 배경을 흰색 배경으로 합성
+    white_bg = Image.new("RGBA", img_original.size, (255, 255, 255, 255))
+    white_bg.alpha_composite(img_original)
+
+    # canvas에는 RGB 이미지로 넘기는 것이 안정적
+    bg_image = white_bg.convert("RGB")
+
     target_width = 800
     original_width, original_height = bg_image.size
+
     scale_ratio = target_width / original_width
     canvas_width = target_width
     canvas_height = int(original_height * scale_ratio)
-    bg_image_resized = bg_image.resize((canvas_width, canvas_height), Image.Resampling.LANCZOS)
+
+    bg_image_resized = bg_image.resize(
+        (canvas_width, canvas_height),
+        Image.Resampling.LANCZOS
+    )
+
+    # 마지막 안전장치: RGB 강제 보장
+    bg_image_resized = bg_image_resized.convert("RGB")
+    `
     
     st.markdown("---")
     
@@ -104,7 +115,7 @@ if uploaded_image is not None and uploaded_excel is not None:
             fill_color=fill_color,
             stroke_width=3 if drawing_mode == "rect" else 5,
             stroke_color=stroke_color,
-            background_color="#ffffff",
+            background_color="#FFFFFF",
             background_image=bg_image_resized,
             update_streamlit=True,
             height=canvas_height,
