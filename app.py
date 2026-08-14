@@ -5,6 +5,7 @@ import cv2
 import matplotlib.pyplot as plt
 import io
 import base64
+import hashlib
 from PIL import Image
 
 # --- CSS를 통한 툴박스 글씨 크기 확대 ---
@@ -16,7 +17,6 @@ div[role="radiogroup"] > label > div > p {
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 from streamlit_drawable_canvas import st_canvas
 
@@ -83,9 +83,10 @@ if uploaded_image is not None and uploaded_excel is not None:
 
     # 마지막 안전장치: RGB 강제 보장
     bg_image_resized = bg_image_resized.convert("RGB")
-    st.write("Debug image mode:", bg_image_resized.mode)
-    st.write("Debug image size:", bg_image_resized.size)
-    st.image(bg_image_resized, caption="Debug: Canvas background preview")
+
+    # 업로드 이미지별로 Canvas key를 다르게 생성
+    image_hash = hashlib.md5(uploaded_image.getvalue()).hexdigest()[:8]
+    canvas_key = f"qra_canvas_{image_hash}_{canvas_width}_{canvas_height}"
     
     st.markdown("---")
     
@@ -124,7 +125,7 @@ if uploaded_image is not None and uploaded_excel is not None:
             width=canvas_width,
             drawing_mode=drawing_mode,
             display_toolbar=True,
-            key="qra_canvas_v2",
+            key=canvas_key,
         )
 
     mapped_is_data = {}
