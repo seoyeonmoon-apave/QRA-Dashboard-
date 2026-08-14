@@ -7,13 +7,13 @@ import io
 import base64
 from PIL import Image
 
-# 🚀 [진짜 마법의 패치] 수석님의 지시대로 app.py 내부에서 완벽하게 해결!
+# 🚨 [최종 마법의 패치] 수석님의 지시대로 app.py 내부 심장부에 직접 패치 🚨
 from streamlit_drawable_canvas import st_canvas
 import streamlit_drawable_canvas
 
-# 스트림릿 클라우드의 보안 차단(CORS)이나 버전 업데이트를 완전히 무시하고,
-# 캔버스 패키지 자체의 이미지 전달 함수를 'Base64 강제 변환'으로 통째로 갈아끼웁니다.
-def direct_base64_patch(image, *args, **kwargs):
+# 캔버스 모듈이 내부적으로 호출하는 st_image(streamlit.elements.image)를 찾아
+# 누락된 image_to_url 함수를 Base64 직통 변환 함수로 강제 주입(덮어쓰기)합니다.
+def patched_image_to_url(image, width=None, clamp=False, channels="RGB", output_format="auto", image_id="", **kwargs):
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
     buffered = io.BytesIO()
@@ -21,7 +21,8 @@ def direct_base64_patch(image, *args, **kwargs):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
-streamlit_drawable_canvas.image_to_url = direct_base64_patch
+if hasattr(streamlit_drawable_canvas, 'st_image'):
+    streamlit_drawable_canvas.st_image.image_to_url = patched_image_to_url
 
 # --- CSS를 통한 툴박스 글씨 크기 확대 ---
 st.markdown("""
@@ -192,7 +193,7 @@ if uploaded_image is not None and uploaded_excel is not None:
                     else:
                         mapped_area_data[str(user_name)] = (cx, cy)
 
-            # 서버 메모리 초과 방지를 위한 2000px 최적화 세팅
+            # 서버 메모리 초과 방지를 위한 2000px 최적화 세팅 유지
             engine_target_width = 2000 
             coord_scale = engine_target_width / canvas_width
             mapped_is_highres = {k: (int(v[0]*coord_scale), int(v[1]*coord_scale)) for k, v in mapped_is_data.items()}
