@@ -7,6 +7,12 @@ import io
 import base64
 import hashlib
 from PIL import Image
+from streamlit_drawable_canvas import st_canvas
+
+# --- 웹 앱 기본 설정 ---
+st.set_page_config(page_title="QRA 대화형 매핑 및 자동화 대시보드", layout="wide")
+st.title("🔥 QRA Interactive Mapping & Analysis Dashboard")
+st.markdown("도면 상의 누출점 및 작업구역을 직접 지정하고 QRA 분석 엔진을 통해 위험도 등고선을 렌더링합니다.")
 
 # --- CSS를 통한 툴박스 글씨 크기 확대 ---
 st.markdown("""
@@ -17,13 +23,6 @@ div[role="radiogroup"] > label > div > p {
 }
 </style>
 """, unsafe_allow_html=True)
-
-from streamlit_drawable_canvas import st_canvas
-
-# --- 웹 앱 기본 설정 ---
-st.set_page_config(page_title="QRA 대화형 매핑 및 자동화 대시보드", layout="wide")
-st.title("🔥 QRA Interactive Mapping & Analysis Dashboard")
-st.markdown("도면 상의 누출점 및 작업구역을 직접 지정하고 QRA 분석 엔진을 통해 위험도 등고선을 렌더링합니다.")
 
 # --- 사이드바: 입력 패널 ---
 st.sidebar.header("📁 Data Input")
@@ -83,10 +82,6 @@ if uploaded_image is not None and uploaded_excel is not None:
 
     # 마지막 안전장치: RGB 강제 보장
     bg_image_resized = bg_image_resized.convert("RGB")
-
-    # 업로드 이미지별로 Canvas key를 다르게 생성
-    image_hash = hashlib.md5(uploaded_image.getvalue()).hexdigest()[:8]
-    canvas_key = f"qra_canvas_{image_hash}_{canvas_width}_{canvas_height}"
     
     st.markdown("---")
     
