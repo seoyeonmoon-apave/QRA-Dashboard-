@@ -158,7 +158,7 @@ if uploaded_image is not None and uploaded_excel is not None:
             stroke_color=stroke_color,
             background_color="#FFFFFF",
             background_image=bg_image_resized,
-            update_streamlit=True,
+            update_streamlit=False,
             height=canvas_height,
             width=canvas_width,
             drawing_mode=drawing_mode,
