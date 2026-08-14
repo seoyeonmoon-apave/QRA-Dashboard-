@@ -193,7 +193,7 @@ if uploaded_image is not None and uploaded_excel is not None:
                     else:
                         mapped_area_data[str(user_name)] = (cx, cy)
 
-            engine_target_width = 2000 
+            engine_target_width = 1000 
             coord_scale = engine_target_width / canvas_width
             mapped_is_highres = {k: (int(v[0]*coord_scale), int(v[1]*coord_scale)) for k, v in mapped_is_data.items()}
             mapped_areas_highres = {clean_name(k): (int(v[0]*coord_scale), int(v[1]*coord_scale)) for k, v in mapped_area_data.items()}
