@@ -83,7 +83,7 @@ if uploaded_image is not None and uploaded_excel is not None:
 
     # 마지막 안전장치: RGB 강제 보장
     bg_image_resized = bg_image_resized.convert("RGB")
-    `
+    
     
     st.markdown("---")
     
