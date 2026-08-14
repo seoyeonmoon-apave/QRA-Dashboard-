@@ -83,7 +83,7 @@ if uploaded_image is not None and uploaded_excel is not None:
         drawing_type = st.radio(
             "그리기 모드 선택",
             ("📍 누출점 (Point)", "🟦 작업구역 (Rect)", "🔄 수정/삭제 (Transform)"),
-            help="※ '수정/삭제' 모드에서는 그려진 도형을 마우스로 선택하여 이동하거나 회전할 수 있으며, 키보드의 Delete 키를 눌러 지울 수 있습니다."
+            help="※ '수정/삭제' 모드에서는 그려진 도형을 마우스로 선택하여 이동하거나 회전할 수 있으며, 키보드의 backspace 키를 눌러 지울 수 있습니다."
         )
         
         if drawing_type == "📍 누출점 (Point)":
