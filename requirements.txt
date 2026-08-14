@@ -5,3 +5,4 @@ opencv-python-headless
 matplotlib
 streamlit-drawable-canvas
 openpyxl
+Pillow
