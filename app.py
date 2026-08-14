@@ -5,50 +5,6 @@ import cv2
 import matplotlib.pyplot as plt
 import io
 from PIL import Image
-
-# --- streamlit-drawable-canvas 최신 Streamlit 호환 패치 ---
-# 최신 Streamlit에서 제거된 image_to_url 함수를 PNG data URL 방식으로 복구
-try:
-    import streamlit.elements.image as st_image
-
-    if not hasattr(st_image, "image_to_url"):
-        def image_to_url(
-            image,
-            width=None,
-            clamp=False,
-            channels="RGB",
-            output_format="PNG",
-            image_id="",
-            allow_emoji=False,
-            **kwargs
-        ):
-            if isinstance(image, np.ndarray):
-                image = Image.fromarray(image)
-
-            if not isinstance(image, Image.Image):
-                image = Image.open(image)
-
-            # 투명 배경이 있으면 흰색 배경으로 합성
-            if image.mode in ("RGBA", "LA"):
-                bg = Image.new("RGBA", image.size, (255, 255, 255, 255))
-                bg.alpha_composite(image.convert("RGBA"))
-                image = bg.convert("RGB")
-            else:
-                image = image.convert("RGB")
-
-            buffer = io.BytesIO()
-            image.save(buffer, format="PNG")
-            encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-            return f"data:image/png;base64,{encoded}"
-
-        st_image.image_to_url = image_to_url
-
-except Exception as e:
-    # 여기서는 st.warning 쓰지 말기
-    # set_page_config보다 먼저 Streamlit 명령이 실행되면 안 됨
-    pass
-
 from streamlit_drawable_canvas import st_canvas
 
 # --- 웹 앱 기본 설정 ---
