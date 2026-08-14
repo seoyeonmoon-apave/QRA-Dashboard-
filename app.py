@@ -83,7 +83,9 @@ if uploaded_image is not None and uploaded_excel is not None:
 
     # 마지막 안전장치: RGB 강제 보장
     bg_image_resized = bg_image_resized.convert("RGB")
-    
+    st.write("Debug image mode:", bg_image_resized.mode)
+    st.write("Debug image size:", bg_image_resized.size)
+    st.image(bg_image_resized, caption="Debug: Canvas background preview")
     
     st.markdown("---")
     
