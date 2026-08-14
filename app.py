@@ -166,6 +166,8 @@ if uploaded_image is not None and uploaded_excel is not None:
             key="qra_canvas_v2",
         )
 
+        st.button("🔄 도형 반영하기")
+        
     mapped_is_data = {}
     mapped_area_data = {}
     has_duplicate = False 
