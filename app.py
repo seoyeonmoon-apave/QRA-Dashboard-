@@ -7,28 +7,24 @@ import io
 import base64
 from PIL import Image
 
-# 💡 [진짜 마법의 패치: 무조건 Base64 강제 변환]
-# Streamlit Cloud의 파일 삭제(Garbage Collection)를 무시하고 
-# 도면 이미지를 웹페이지 자체에 영구적으로 박아버리는 강력한 패치입니다.
-import streamlit.elements.image as st_image
-
-def patched_image_to_url(image, width=None, clamp=False, channels="RGB", output_format="auto", image_id="", **kwargs):
+# 🚨 [가장 강력한 마법의 패치: 캔버스 이미지 증발 원천 차단] 🚨
+# 서버가 이미지를 몰래 지워버리는 것을 막기 위해, 도면을 가벼운 JPEG 텍스트로 강제 변환하여 캔버스에 영구 주입합니다.
+import streamlit_drawable_canvas
+def force_base64_url(image, *args, **kwargs):
+    buf = io.BytesIO()
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-    buffered = io.BytesIO()
-    image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return f"data:image/png;base64,{img_str}"
+    # 퀄리티를 80으로 타협하여 용량을 줄이고 렌더링 속도 확보
+    image.convert("RGB").save(buf, format="JPEG", quality=80)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
-# 구버전(1.40 이하) Streamlit 패치
-st_image.image_to_url = patched_image_to_url
-
-# 신버전(1.41 이상) Streamlit 패치
-try:
-    import streamlit.elements.lib.image_utils as image_utils
-    image_utils.image_to_url = patched_image_to_url
-except ImportError:
-    pass
+# 캔버스 라이브러리가 몰래 사용하는 모든 이미지 로드 경로를 차단하고 우리의 패치를 강제 적용
+if hasattr(streamlit_drawable_canvas, 'st_image'):
+    streamlit_drawable_canvas.st_image.image_to_url = force_base64_url
+if hasattr(streamlit_drawable_canvas, 'image_utils'):
+    streamlit_drawable_canvas.image_utils.image_to_url = force_base64_url
+if hasattr(streamlit_drawable_canvas, 'image_to_url'):
+    streamlit_drawable_canvas.image_to_url = force_base64_url
 
 from streamlit_drawable_canvas import st_canvas
 
