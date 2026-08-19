@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from PIL import Image
+from streamlit_drawable_canvas import st_canvas
 
 # --- CSS를 통한 툴박스 글씨 크기 확대 ---
 st.markdown("""
@@ -16,20 +17,6 @@ div[role="radiogroup"] > label > div > p {
 }
 </style>
 """, unsafe_allow_html=True)
-
-# [마법의 패치 완결판]
-import streamlit.elements.image as st_image
-if not hasattr(st_image, 'image_to_url'):
-    def patched_image_to_url(image, width=None, clamp=False, channels="RGB", output_format="auto", image_id="", **kwargs):
-        if isinstance(image, np.ndarray):
-            image = Image.fromarray(image)
-        buffered = io.BytesIO()
-        image.save(buffered, format="JPEG", quality=95)
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        return f"data:image/jpeg;base64,{img_str}"
-    st_image.image_to_url = patched_image_to_url
-
-from streamlit_drawable_canvas import st_canvas
 
 # --- 웹 앱 기본 설정 ---
 st.set_page_config(page_title="QRA 대화형 매핑 및 자동화 대시보드", layout="wide")
