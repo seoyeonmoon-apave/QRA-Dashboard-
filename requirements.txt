@@ -5,5 +5,5 @@ opencv-python-headless
 matplotlib
 xlsxwriter
 Pillow
-streamlit-drawable-canvas-fix
+streamlit-drawable-canvas
 openpyxl
