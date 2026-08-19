@@ -1,8 +1,8 @@
 streamlit
-streamlit-drawable-canvas
 pandas
 numpy
-opencv-python-headless
+opencv-python
 matplotlib
-pillow
-openpyxl
+xlsxwriter
+Pillow
+streamlit-drawable-canvas
