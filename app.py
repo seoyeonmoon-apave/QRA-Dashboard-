@@ -6,6 +6,30 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from PIL import Image
+
+# 💡 [진짜 마법의 패치: 무조건 Base64 강제 변환]
+# Streamlit Cloud의 파일 삭제(Garbage Collection)를 무시하고 
+# 도면 이미지를 웹페이지 자체에 영구적으로 박아버리는 강력한 패치입니다.
+import streamlit.elements.image as st_image
+
+def patched_image_to_url(image, width=None, clamp=False, channels="RGB", output_format="auto", image_id="", **kwargs):
+    if isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    return f"data:image/png;base64,{img_str}"
+
+# 구버전(1.40 이하) Streamlit 패치
+st_image.image_to_url = patched_image_to_url
+
+# 신버전(1.41 이상) Streamlit 패치
+try:
+    import streamlit.elements.lib.image_utils as image_utils
+    image_utils.image_to_url = patched_image_to_url
+except ImportError:
+    pass
+
 from streamlit_drawable_canvas import st_canvas
 
 # --- CSS를 통한 툴박스 글씨 크기 확대 ---
@@ -92,7 +116,7 @@ if uploaded_image is not None and uploaded_excel is not None:
         drawing_type = st.radio(
             "그리기 모드 선택",
             ("📍 누출점 (Point)", "🟦 작업구역 (Rect)", "🔄 수정/삭제 (Transform)"),
-            help="❓ **개별 도형 삭제 방법 (포커스 복구)**\n\n1. '수정/삭제' 모드를 선택합니다.\n2. 지우고 싶은 도형을 **한 번 클릭**합니다.\n3. 선택된 도형을 **한 번 더 클릭**하여 캔버스 초점을 되찾아옵니다.\n4. 키보드 **[Delete]** 또는 **[Backspace]** 키를 누릅니다.\n\n🚨 캔버스 툴바의 휴지통(🗑️) 아이콘은 '전체 지우기'입니다!"
+            help="❓ **개별 도형 삭제 방법 (포커스 복구)**\n\n1. '수정/삭제' 모드를 선택합니다.\n2. 지우고 싶은 도형을 **한 번 클릭**합니다.\n3. 선택된 도형을 **한 번 더 클릭**하여 캔버스 초점을 되찾아옵니다.\n4. 키보드 **[Delete]** 또는 **[Backspace]** 키를 누릅니다."
         )
         
         if drawing_type == "📍 누출점 (Point)":
@@ -179,7 +203,7 @@ if uploaded_image is not None and uploaded_excel is not None:
                     if user_name in mapped_area_data: st.error(f"'{user_name}' 중복!"); has_duplicate = True
                     else: mapped_area_data[str(user_name)] = (cx, cy)
 
-            engine_target_width = 4000 
+            engine_target_width = 2000 
             coord_scale = engine_target_width / canvas_width
             mapped_is_highres = {k: (int(v[0]*coord_scale), int(v[1]*coord_scale)) for k, v in mapped_is_data.items()}
             mapped_areas_highres = {clean_name(k): (int(v[0]*coord_scale), int(v[1]*coord_scale)) for k, v in mapped_area_data.items()}
@@ -469,7 +493,6 @@ if uploaded_image is not None and uploaded_excel is not None:
                     df_irpa = st.session_state.df_irpa
                     fn_data = st.session_state.fn_data
                     
-                    # --- 실시간 IRPA 차트 재생성 ---
                     fig_irpa, ax_irpa = plt.subplots(figsize=(12, 8))
                     ax_irpa.barh(df_irpa['Category'], df_irpa['IRPA_Plot'], color='dodgerblue')
                     ax_irpa.axvline(x=limit_unacc, color='red', linestyle='--', linewidth=2, label=f'Unacceptable ({limit_unacc:.0E})')
@@ -485,7 +508,6 @@ if uploaded_image is not None and uploaded_excel is not None:
                     buf_irpa = io.BytesIO(); fig_irpa.savefig(buf_irpa, format='png', dpi=300); buf_irpa.seek(0)
                     bytes_irpa = buf_irpa.getvalue()
 
-                    # --- 실시간 F-N Curve 재생성 ---
                     fig_fn, ax_fn = plt.subplots(figsize=(10, 8))
                     max_n = max_n_axis 
                     n_range = np.logspace(0, np.log10(max_n), 100) 
@@ -515,14 +537,13 @@ if uploaded_image is not None and uploaded_excel is not None:
                     ax_fn.grid(True, which='both', ls='--', alpha=0.6)
                     
                     ax_fn.set_xlim(left=1, right=max_n)
-                    ax_fn.set_ylim(bottom=1e-5, top=1e-1) # 💡 수석님 요청사항: Y축 10^-5 ~ 10^-1 영구 고정 완벽 반영
+                    ax_fn.set_ylim(bottom=1e-5, top=1e-1)
                     ax_fn.legend(loc='upper right', fontsize=12)
                     
                     plt.tight_layout()
                     buf_fn = io.BytesIO(); fig_fn.savefig(buf_fn, format='png', dpi=300); buf_fn.seek(0)
                     bytes_fn = buf_fn.getvalue()
 
-                    # --- 실시간 Excel 생성 ---
                     excel_buffer = io.BytesIO()
                     with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
                         df_fn_out = df_fn[['N', 'Cum_F']] if not df_fn.empty else pd.DataFrame(columns=['N', 'Cum_F'])
@@ -535,7 +556,6 @@ if uploaded_image is not None and uploaded_excel is not None:
                         ws_irpa.insert_image('D2', 'irpa.png', {'image_data': io.BytesIO(bytes_irpa), 'x_scale': 0.8, 'y_scale': 0.8})
                     excel_data = excel_buffer.getvalue()
 
-                    # --- 실시간 PDF 생성 ---
                     images_to_pdf = []
                     for img_array in [st.session_state.base_lsir, st.session_state.base_therm, st.session_state.base_exp, st.session_state.base_comb, st.session_state.base_irpa]:
                         images_to_pdf.append(Image.fromarray(img_array))
