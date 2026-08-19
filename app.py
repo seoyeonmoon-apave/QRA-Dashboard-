@@ -515,7 +515,7 @@ if uploaded_image is not None and uploaded_excel is not None:
                     ax_fn.grid(True, which='both', ls='--', alpha=0.6)
                     
                     ax_fn.set_xlim(left=1, right=max_n)
-                    ax_fn.set_ylim(bottom=min_y, top=1e-1)
+                    ax_fn.set_ylim(bottom=1e-5, top=1e-1) # 💡 수석님 요청사항: Y축 10^-5 ~ 10^-1 영구 고정 완벽 반영
                     ax_fn.legend(loc='upper right', fontsize=12)
                     
                     plt.tight_layout()
