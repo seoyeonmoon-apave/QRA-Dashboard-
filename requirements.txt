@@ -1,9 +1,9 @@
-streamlit==1.29.0
+streamlit
 pandas
-numpy<2.0.0
+numpy
 opencv-python-headless
 matplotlib
 xlsxwriter
 Pillow
-streamlit-drawable-canvas==0.9.3
+streamlit-drawable-canvas-fix
 openpyxl
