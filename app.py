@@ -24,11 +24,34 @@ st.set_page_config(page_title="QRA 대화형 매핑 및 자동화 대시보드",
 st.title("🔥 QRA Interactive Mapping & Analysis Dashboard")
 st.markdown("도면 상의 누출점 및 작업구역을 클릭하여 지정하고, QRA 분석 엔진을 통해 위험도 등고선을 렌더링합니다.")
 
+# 💡 [NEW] 사용자 친화적 가이드라인 (Expander 추가)
+with st.expander("❓ 프로그램 사용법 및 연산 과정 안내 (클릭하여 펼치기)", expanded=False):
+    st.markdown("""
+    #### 📌 1. 프로그램 사용법 (Step-by-Step)
+    1. **도면 및 엑셀 업로드**: 좌측 사이드바에서 분석할 공정 도면 이미지와 입력 데이터가 담긴 마스터 엑셀 파일을 업로드하고, 도면의 실제 가로 길이(m)를 입력합니다.
+    2. **누출점 및 작업구역 핀 꽂기 (Step 1)**: 우측 도면 위를 마우스로 직접 클릭하여 누출점(Point)과 인구 밀집 작업구역(Area)을 지정합니다.
+    3. **데이터 매핑 및 렌더링 (Step 2 & 3)**: 찍어둔 핀들에 엑셀의 시나리오/구역 이름을 매칭한 뒤, `연산 및 렌더링 실행` 버튼을 누르면 자동으로 리포트가 생성됩니다.
+
+    #### 📊 2. 마스터 엑셀 필수 데이터
+    * **`IS_Coordinates`**: 누출점 ID 및 누출공 크기별 빈도 (Freq_mm)
+    * **`PHAST_Distances`**: 열복사/과압/플래시 피해 반경 및 시나리오별 점화 확률 (P_jet, P_pool, P_flash, P_vce)
+    * **`Wind_rose`**: 풍향(Angle) 및 풍속별 발생 확률 (Probability)
+    * **`Occupancy`**: 작업구역별 인구수 및 직군별 체류 시간 정보
+    * **`Vulnerability_Criteria`**: 복사열 및 과압 기준에 따른 실외 취약도(사망 확률)
+
+    #### ⚙️ 3. QRA 핵심 연산 과정
+    * **화재/폭발 반경 및 LSIR 산출**: 누출 빈도 $\\times$ 풍향/풍속(Windrose) 확률 $\\times$ 점화 확률을 조합하여 최종 사고 발생 빈도를 계산합니다. 이 빈도와 화재/폭발 피해 반경을 도면에 픽셀 단위로 투영(Mapping)하고, 취약도를 적용하여 개인적 위험도(LSIR) 등고선을 생성합니다.
+    * **IRPA (근로자 개인 위험도)**: 도출된 구역별 LSIR 값에 근로자 직군별 체류 시간 비중을 곱하여, 1년간 노출되는 실질적 위험도를 산출합니다.
+    * **F-N Curve**: 도출된 사상자 수(N)와 해당 시나리오의 누적 빈도(F)를 집계하여 허용 리스크 기준(ALARP)과 비교하는 곡선을 그립니다.
+    """)
+
 # --- 사이드바: 입력 패널 ---
 st.sidebar.header("📁 Data Input")
-uploaded_image = st.sidebar.file_uploader("1. 도면 이미지 업로드 (.png, .jpg)", type=['png', 'jpg', 'jpeg'])
-real_width_m = st.sidebar.number_input("2. 도면 실제 가로 길이 (m)", min_value=1.0, value=1000.0, step=10.0)
-uploaded_excel = st.sidebar.file_uploader("3. 마스터 엑셀 업로드 (.xlsx)", type=['xlsx'])
+# 💡 [NEW] 툴팁(help) 추가
+uploaded_image = st.sidebar.file_uploader("1. 도면 이미지 업로드 (.png, .jpg)", type=['png', 'jpg', 'jpeg'], help="QRA 결과를 매핑할 공정/공장 배치도 이미지를 업로드합니다.")
+real_width_m = st.sidebar.number_input("2. 도면 실제 가로 길이 (m)", min_value=1.0, value=1000.0, step=10.0, help="업로드한 이미지의 실제 가로 폭 길이를 미터(m) 단위로 입력하여 픽셀 스케일을 맞춥니다.")
+# 💡 [NEW] 툴팁(help) 추가
+uploaded_excel = st.sidebar.file_uploader("3. 마스터 엑셀 업로드 (.xlsx)", type=['xlsx'], help="빈도, PHAST 피해반경, 풍배도, 인원 정보 등이 포함된 지정된 양식의 QRA 마스터 엑셀을 업로드합니다.")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎚️ 리스크 허용 기준 (F-N Curve)")
@@ -177,7 +200,8 @@ if uploaded_image is not None and uploaded_excel is not None:
             st.warning("⚠️ 중복 선택된 항목을 수정해야 분석을 실행할 수 있습니다.")
         else:
             st.markdown("### 🚀 Step 3. High-Res QRA Analysis Engine")
-            if st.button("QRA 물리 모델 초정밀 연산 및 렌더링 실행", type="primary", use_container_width=True):
+            # 💡 [NEW] 툴팁(help) 추가
+            if st.button("QRA 물리 모델 초정밀 연산 및 렌더링 실행", type="primary", use_container_width=True, help="입력된 데이터와 풍향/풍속 확률을 바탕으로 도면 상에 피해 반경, LSIR/IRPA, FN Curve를 연산합니다. 연산량이 많아 수십 초가량 소요될 수 있습니다."):
                 progress_bar = st.progress(0, text="초기화 및 데이터 로드 중...")
                 try:
                     progress_bar.progress(10, text="1/5: 마스터 엑셀 파라미터 매핑 중...")
